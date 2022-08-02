@@ -1,14 +1,13 @@
-import defendants from '../defendants.json'
 import Styles from '../styles/DefendantsList.module.scss'
 import {useState} from 'react'
 
-const DefendantList = () =>{
+const DefendantList = (props) =>{
     const [defendantSearch, setDefendantSearch] = useState('')
-
+    const defendants = props.defendants
     return <div className={Styles.DefendantsListContainer}>
 
         <label htmlFor="defendantSearch">Defendant Search: </label>
-        <input name='defendantSearch' type="text" placeholder='Search Name' onChange={(e)=>{
+        <input name='defendantSearch' type="search" placeholder='Search Name' onChange={(e)=>{
             setDefendantSearch(e.target.value)
         }}></input>
 
@@ -42,6 +41,16 @@ const DefendantList = () =>{
         </tbody>
     </table>
         </div>
+}
+
+export const getStaticProps= async ()=>{
+    const res = await fetch(`http://localhost:3000/api/defendants`)
+    const defendants = await res.json();
+    return {
+        props:{
+            defendants
+        }
+    }
 }
 
 export default DefendantList
