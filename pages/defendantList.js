@@ -35,7 +35,7 @@ const DefendantList = (props) =>{
                 <td>{defendant.weight} Lbs</td>
                 <td>{defendant.gender}</td>
                 <td>{defendant.race}</td>
-                <td>{defendant.reasons}</td>
+                <td>{defendant.reason}</td>
             </tr>)
         })}
         </tbody>
