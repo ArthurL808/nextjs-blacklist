@@ -4,6 +4,12 @@ import {useState} from 'react'
 const DefendantList = (props) =>{
     const [defendantSearch, setDefendantSearch] = useState('')
     const defendants = props.defendants
+
+    const filteredDefendantsList = defendants.filter(defendant =>{
+        if(defendant.first_name.toLowerCase().concat(" ",defendant.last_name.toLowerCase()).includes(defendantSearch.toLowerCase())){
+            return defendant
+        }
+    })
     return <div className={Styles.DefendantsListContainer}>
 
         <label htmlFor="defendantSearch">Defendant Search: </label>
@@ -25,7 +31,20 @@ const DefendantList = (props) =>{
             <th>Blacklist Reason</th>
         </tr>
         </thead>
-        <tbody className={Styles.defendantListBody}>
+        { defendantSearch ? <tbody className={Styles.defendantListBody}>
+        {filteredDefendantsList.map((defendant)=>{
+            return( <tr className={Styles.defendantRow} key={defendant.id}>
+                <td>{defendant.first_name}</td>
+                <td>{defendant.last_name}</td>
+                <td>{defendant.dob}</td>
+                <td>{defendant.height} Inches</td>
+                <td>{defendant.weight} Lbs</td>
+                <td>{defendant.gender}</td>
+                <td>{defendant.race}</td>
+                <td>{defendant.reason}</td>
+            </tr>)
+        })}
+        </tbody> : <tbody className={Styles.defendantListBody}>
         {defendants.map((defendant)=>{
             return( <tr className={Styles.defendantRow} key={defendant.id}>
                 <td>{defendant.first_name}</td>
@@ -38,12 +57,13 @@ const DefendantList = (props) =>{
                 <td>{defendant.reason}</td>
             </tr>)
         })}
-        </tbody>
+        </tbody>}
+
     </table>
         </div>
 }
 
-export const getStaticProps= async ()=>{
+export const getStaticProps = async ()=>{
     const res = await fetch(`http://localhost:3000/api/defendants`)
     const defendants = await res.json();
     return {
