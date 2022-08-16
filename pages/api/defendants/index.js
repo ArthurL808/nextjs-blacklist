@@ -24,6 +24,18 @@ export default async function handler(req,res) {
         where: { id: req.body}
        })
               res.status(200).json(deleteDefendant)
+    }else if (req.method === "PATCH"){
+        const data = req.body
+        const height = convertFeetToInches(req.body.feet, req.body.inches)
+        delete data.feet
+        delete data.inches
+        data.height = height
+        const editedDefendant = await prisma.defendant.update({
+            where:{ id:data.id},
+            data: data
+        })
+        console.log(editedDefendant)
+        res.status(200).json(editedDefendant)
     }
         }catch(err){
             console.error(err)
