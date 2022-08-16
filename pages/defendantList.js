@@ -49,6 +49,14 @@ const DefendantList = (props) =>{
             reason: '',
         })
         setShow(false)
+        defendants.push(res)
+    }
+    const handleDelete = async (id) => {
+        const res = await fetch(`http://localhost:3000/api/defendants`,{
+            method: 'DELETE',
+            body: id
+        })
+        const deletedDefendant = await res.json()
     }
 
     return <div className={Styles.DefendantsListContainer}>
@@ -83,6 +91,7 @@ const DefendantList = (props) =>{
                 <td>{defendant.gender}</td>
                 <td>{defendant.race}</td>
                 <td>{defendant.reason}</td>
+                <td><button onClick={()=> handleDelete(defendant.id)}>Delete</button></td>
             </tr>)
         })}
         </tbody> : <tbody className={Styles.defendantListBody}>
@@ -96,6 +105,7 @@ const DefendantList = (props) =>{
                 <td>{defendant.gender}</td>
                 <td>{defendant.race}</td>
                 <td>{defendant.reason}</td>
+                <td><button onClick={()=> handleDelete(defendant.id)}>Delete</button></td>
             </tr>)
         })}
         </tbody>}
