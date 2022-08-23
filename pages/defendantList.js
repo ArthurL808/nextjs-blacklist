@@ -1,18 +1,12 @@
 import Styles from '../styles/DefendantsList.module.scss'
-import {useState,useEffect} from 'react'
+import {useState} from 'react'
 import {useSession} from 'next-auth/react'
-import { useRouter } from 'next/router'
+import {unstable_getServerSession} from 'next-auth/next'
+import {authOptions} from './api/auth/[...nextauth]'
 import prisma from '../prisma/prisma'
 
 const DefendantList = ({defendants}) =>{
-    const router = useRouter()
     const {data:session,status} = useSession();
-    
-    useEffect(()=>{
-        if(status !== 'loading' && !session){
-            router.push('/')
-        }
-    },[session,router,status])
     
     const [defendantSearch, setDefendantSearch] = useState('')
 
@@ -298,9 +292,18 @@ const DefendantList = ({defendants}) =>{
         </div>
 }
 
-export const getServerSideProps = async ()=>{
-    const res = await prisma.defendant.findMany()
-    const defendants = JSON.parse(JSON.stringify(res))
+export const getServerSideProps = async (context)=>{
+    const session = await unstable_getServerSession(context.req,context.res,authOptions)
+    if (!session) {
+        return {
+          redirect: {
+            destination: '/',
+            permanent: false,
+          },
+        }
+      }
+      const res = await prisma.defendant.findMany()
+      const defendants = JSON.parse(JSON.stringify(res))
 
     return {
         props:{defendants}
