@@ -1,12 +1,10 @@
 import Styles from '../styles/DefendantsList.module.scss'
 import {useState} from 'react'
-import {useSession} from 'next-auth/react'
 import {unstable_getServerSession} from 'next-auth/next'
 import {authOptions} from './api/auth/[...nextauth]'
 import prisma from '../prisma/prisma'
 
-const DefendantList = ({defendants}) =>{
-    const {data:session,status} = useSession();
+const DefendantList = ({defendants,session}) =>{
     
     const [defendantSearch, setDefendantSearch] = useState('')
 
@@ -113,14 +111,6 @@ const DefendantList = ({defendants}) =>{
         const deletedDefendant = await res.json()
     }
     
-    if(typeof window !== 'undefined' && status === 'loading'){
-        return null
-    }
-
-    if(!session){
-        return null
-    }
-
     return <div className={Styles.DefendantsListContainer}>
         {/* SearchBar Start */}
         <label htmlFor="defendantSearch">Defendant Search: </label>
@@ -306,7 +296,7 @@ export const getServerSideProps = async (context)=>{
       const defendants = JSON.parse(JSON.stringify(res))
 
     return {
-        props:{defendants}
+        props:{defendants,session}
     }
 }
 
