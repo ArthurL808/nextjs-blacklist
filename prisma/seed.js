@@ -5,7 +5,7 @@ const load = async ()=>{
     
     try{
         await prisma.defendant.deleteMany();
-        await prisma.user.deleteMany();
+        console.log('Defendant table deleted');
         await prisma.defendant.createMany({
             data: [
                 {
@@ -58,22 +58,6 @@ const load = async ()=>{
             skipDuplicates: true
         })
         console.log('Defendant table seeded')
-        await prisma.user.createMany({
-          data: [{
-            "name": "Kerwinn",
-            "email": "kswindon0@photobucket.com",
-            "password": "Ru8pXd6W"
-          }, {
-            "name": "Chrysler",
-            "email": "cvalde1@opera.com",
-            "password": "3ggmZi7"
-          }, {
-            "name": "Lorilyn",
-            "email": "lpepperell2@addtoany.com",
-            "password": "I7YBha5sidq"
-          }]
-        })
-        console.log('User table seeded')
     }catch(e){
         console.log(e);
         console.error(e.message);

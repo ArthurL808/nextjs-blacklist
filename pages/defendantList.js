@@ -1,8 +1,19 @@
 import Styles from '../styles/DefendantsList.module.scss'
-import {useState} from 'react'
+import {useState,useEffect} from 'react'
+import {useSession} from 'next-auth/react'
+import { useRouter } from 'next/router'
+import prisma from '../prisma/prisma'
 
-const DefendantList = (props) =>{
-    const defendants = props.defendants
+const DefendantList = ({defendants}) =>{
+    const router = useRouter()
+    const {data:session,status} = useSession();
+    
+    useEffect(()=>{
+        if(status !== 'loading' && !session){
+            router.push('/')
+        }
+    },[session,router,status])
+    
     const [defendantSearch, setDefendantSearch] = useState('')
 
     const [formData, setFormData] = useState({
@@ -106,6 +117,14 @@ const DefendantList = (props) =>{
             body: id
         })
         const deletedDefendant = await res.json()
+    }
+    
+    if(typeof window !== 'undefined' && status === 'loading'){
+        return null
+    }
+
+    if(!session){
+        return null
     }
 
     return <div className={Styles.DefendantsListContainer}>
@@ -279,13 +298,12 @@ const DefendantList = (props) =>{
         </div>
 }
 
-export const getStaticProps = async ()=>{
-    const res = await fetch(`http://localhost:3000/api/defendants`)
-    const defendants = await res.json();
+export const getServerSideProps = async ()=>{
+    const res = await prisma.defendant.findMany()
+    const defendants = JSON.parse(JSON.stringify(res))
+
     return {
-        props:{
-            defendants
-        }
+        props:{defendants}
     }
 }
 
