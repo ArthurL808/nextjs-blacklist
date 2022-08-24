@@ -5,6 +5,7 @@ const load = async ()=>{
     
     try{
         await prisma.defendant.deleteMany();
+        console.log('Defendant table deleted');
         await prisma.defendant.createMany({
             data: [
                 {
