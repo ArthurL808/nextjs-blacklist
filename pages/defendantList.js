@@ -2,7 +2,7 @@ import Styles from '../styles/DefendantsList.module.scss'
 import {useState} from 'react'
 import {unstable_getServerSession} from 'next-auth/next'
 import {authOptions} from './api/auth/[...nextauth]'
-import prisma from '../prisma/prisma'
+import {getDefendants} from '../services/defendantService'
 
 const DefendantList = ({defendants,session}) =>{
     
@@ -39,12 +39,19 @@ const DefendantList = ({defendants,session}) =>{
             return defendant
         }
     })
+     
+    const convertFeetToInches = (data) => {
+      const height = Number(data.feet) * 12 + Number(data.inches);
+      delete data.feet
+      delete data.inches
+      data.height = height
+      return data
+    }
 
     const convertInchesToFeet = (defendant) =>{
         let feet = Math.floor(Number(defendant.height) / 12);
         let inches = defendant.height % 12;
         return defendant.feet = feet, defendant.inches = inches;
-
     }
 
     const handleChange = (e) =>{
@@ -57,6 +64,7 @@ const DefendantList = ({defendants,session}) =>{
     
     const handleSubmit = async (e) =>{
         e.preventDefault();
+        convertFeetToInches(formData)
         const defendant = await fetch(`http://localhost:3000/api/defendants`,{
             method: 'POST',
             headers: {
@@ -81,8 +89,9 @@ const DefendantList = ({defendants,session}) =>{
     }
     const handleEditSubmit = async (e) =>{
         e.preventDefault();
+        convertFeetToInches(editFormData)
         const defendant = await fetch(`http://localhost:3000/api/defendants`,{
-            method: 'PATCH',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
               },
@@ -292,7 +301,7 @@ export const getServerSideProps = async (context)=>{
           },
         }
       }
-      const res = await prisma.defendant.findMany()
+      const res = await getDefendants()
       const defendants = JSON.parse(JSON.stringify(res))
 
     return {
