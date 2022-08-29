@@ -34,6 +34,15 @@ const DefendantList = ({defendants,session}) =>{
     const [show, setShow] = useState(false)
     const [showEdit, setShowEdit] = useState(false)
 
+    const replaceDefendant = (res) =>{
+        const index = defendants.findIndex(defendant =>{
+            return defendant.id === res.id
+        })
+        if(index > -1){
+            return defendants.splice(index, 1, res );
+        }
+    }
+
     const filteredDefendantsList = defendants.filter(defendant =>{
         if(defendant.first_name.toLowerCase().concat(" ",defendant.last_name.toLowerCase()).includes(defendantSearch.toLowerCase())){
             return defendant
@@ -87,6 +96,7 @@ const DefendantList = ({defendants,session}) =>{
         setShow(false)
         defendants.push(res)
     }
+
     const handleEditSubmit = async (e) =>{
         e.preventDefault();
         convertFeetToInches(editFormData)
@@ -98,6 +108,7 @@ const DefendantList = ({defendants,session}) =>{
             body: JSON.stringify(editFormData),
         })
         const res = await defendant.json()
+        replaceDefendant(res)
         setFormData({
             first_name: '',
             last_name: '',
