@@ -4,7 +4,7 @@ import {unstable_getServerSession} from 'next-auth/next'
 import {authOptions} from './api/auth/[...nextauth]'
 import {getDefendants} from '../services/defendantService'
 
-const DefendantList = ({defendants,session}) =>{
+const DefendantList = ({defendants,user}) =>{
     
     const [defendantSearch, setDefendantSearch] = useState('')
 
@@ -304,6 +304,7 @@ const DefendantList = ({defendants,session}) =>{
 
 export const getServerSideProps = async (context)=>{
     const session = await unstable_getServerSession(context.req,context.res,authOptions)
+    const user= session?.user
     if (!session) {
         return {
           redirect: {
@@ -316,7 +317,7 @@ export const getServerSideProps = async (context)=>{
       const defendants = JSON.parse(JSON.stringify(res))
 
     return {
-        props:{defendants,session}
+        props:{user,defendants}
     }
 }
 
