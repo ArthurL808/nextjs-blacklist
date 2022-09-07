@@ -14,7 +14,7 @@ export const authOptions = {
   secret: process.env.NEXT_AUTH_SECRET,
   callbacks:{
     session: async ({session,user}) => {
-      session.user.userId = user.id;
+      session.user.id = user.id;
       return session
     }
   }
