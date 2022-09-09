@@ -131,10 +131,13 @@ const DefendantList = ({defendants,user}) =>{
         setShowEdit(false)
     }
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (defendant) => {
         const res = await fetch(`http://localhost:3000/api/defendants`,{
             method: 'DELETE',
-            body: id
+            headers: {
+                'Content-Type': 'application/json',
+              },
+            body: JSON.stringify(defendant)
         })
         const deletedDefendant = await res.json()
     }
@@ -186,7 +189,7 @@ const DefendantList = ({defendants,user}) =>{
                 {user.id === defendant.userId ? 
                 <>
                     {/* Delete Defendant Button */}
-                    <td><button onClick={()=> handleDelete(defendant.id)}>Delete</button></td>
+                    <td><button onClick={()=> handleDelete(defendant)}>Delete</button></td>
                     {/* Open Edit Form Button */}
                     <td><button onClick={()=> {
                     setEditFormData(defendant)
@@ -215,7 +218,7 @@ const DefendantList = ({defendants,user}) =>{
                 {user.id === defendant.userId ? 
                 <>
                     {/* Delete Defendant Button */}
-                    <td><button onClick={()=> handleDelete(defendant.id)}>Delete</button></td>
+                    <td><button onClick={()=> handleDelete(defendant)}>Delete</button></td>
                     {/* Open Edit Form Button */}
                     <td><button onClick={()=> {
                     setEditFormData(defendant)

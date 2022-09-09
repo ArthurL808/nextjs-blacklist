@@ -37,7 +37,7 @@ export default async function handler(req,res) {
                 if(session.user.id !== req.body.userId){
                     return res.status(401).send('Unauthorized User')
                 }
-            const deletedDefendant = await removeDefendant(req.body)
+            const deletedDefendant = await removeDefendant(req.body.id)
             return res.status(200).json(deletedDefendant)
         }    
     }
