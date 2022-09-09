@@ -12,6 +12,7 @@ datasource db {
 
 model Defendant {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String
   first_name String
   last_name  String
   dob        String
@@ -21,6 +22,7 @@ model Defendant {
   race       String
   reason     String
   createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -51,13 +53,14 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String      @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?     @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+  defendant     Defendant[]
 }
 
 model VerificationToken {

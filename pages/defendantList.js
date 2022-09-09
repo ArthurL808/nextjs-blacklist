@@ -4,8 +4,7 @@ import {unstable_getServerSession} from 'next-auth/next'
 import {authOptions} from './api/auth/[...nextauth]'
 import {getDefendants} from '../services/defendantService'
 
-const DefendantList = ({defendants,session}) =>{
-    
+const DefendantList = ({defendants,user}) =>{
     const [defendantSearch, setDefendantSearch] = useState('')
 
     const [formData, setFormData] = useState({
@@ -18,7 +17,9 @@ const DefendantList = ({defendants,session}) =>{
         gender: '',
         race: '',
         reason: '',
+        userId: ''
     })
+
     const [editFormData, setEditFormData] = useState({
         first_name: '',
         last_name: '',
@@ -63,6 +64,11 @@ const DefendantList = ({defendants,session}) =>{
         return defendant.feet = feet, defendant.inches = inches;
     }
 
+    const convertDate = (timestamp) => {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString()
+    }
+
     const handleChange = (e) =>{
         e.target.type === "number" ? setFormData({...formData,[e.target.name]:parseInt(e.target.value)}) :  setFormData({...formData,[e.target.name]:e.target.value})
     }
@@ -73,6 +79,7 @@ const DefendantList = ({defendants,session}) =>{
     
     const handleSubmit = async (e) =>{
         e.preventDefault();
+        setFormData({...formData, userId: user.id})
         convertFeetToInches(formData)
         const defendant = await fetch(`http://localhost:3000/api/defendants`,{
             method: 'POST',
@@ -81,7 +88,7 @@ const DefendantList = ({defendants,session}) =>{
               },
             body: JSON.stringify(formData),
         })
-        const res = await defendant.json()
+        const res = await defendant.json();
         setFormData({
             first_name: '',
             last_name: '',
@@ -92,6 +99,7 @@ const DefendantList = ({defendants,session}) =>{
             gender: '',
             race: '',
             reason: '',
+            userId: ''
         })
         setShow(false)
         defendants.push(res)
@@ -109,7 +117,7 @@ const DefendantList = ({defendants,session}) =>{
         })
         const res = await defendant.json()
         replaceDefendant(res)
-        setFormData({
+        setEditFormData({
             first_name: '',
             last_name: '',
             dob: '',
@@ -123,10 +131,13 @@ const DefendantList = ({defendants,session}) =>{
         setShowEdit(false)
     }
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (defendant) => {
         const res = await fetch(`http://localhost:3000/api/defendants`,{
             method: 'DELETE',
-            body: id
+            headers: {
+                'Content-Type': 'application/json',
+              },
+            body: JSON.stringify(defendant)
         })
         const deletedDefendant = await res.json()
     }
@@ -151,37 +162,46 @@ const DefendantList = ({defendants,session}) =>{
             <th>Weight</th>
             <th>Gender</th>
             <th>Race</th>
-            <th>Blacklist Reason</th>
+            <th>Reason</th>
+            <th>Date Added</th>
+            <th>Added By</th>
         </tr>
         </thead>
         {/* Table Head End */}
 
         { defendantSearch ? <tbody className={Styles.defendantListBody}>
         {filteredDefendantsList.map((defendant)=>{
+            convertInchesToFeet(defendant)
+            let createdAt = convertDate(defendant.createdAt)
             return( <tr className={Styles.defendantRow} key={defendant.id}>
-                <td>{defendant.first_name}</td>
+                 <td>{defendant.first_name}</td>
                 <td>{defendant.last_name}</td>
                 <td>{defendant.dob}</td>
-                <td>{defendant.height} Inches</td>
+                <td>{`${defendant.feet}' ${defendant.inches} "`}</td>
                 <td>{defendant.weight} Lbs</td>
                 <td>{defendant.gender}</td>
                 <td>{defendant.race}</td>
                 <td>{defendant.reason}</td>
-
-                {/* Delete Defendant Button */}
-                <td><button onClick={()=> handleDelete(defendant.id)}>Delete</button></td>
-
-                {/* Open Edit Form Button */}
-                <td><button onClick={()=> {
+                <td>{createdAt}</td>
+                <td>{defendant.user.name}</td>
+                
+                {/* Checks if user can make changes to defendant row */}
+                {user.id === defendant.userId ? 
+                <>
+                    {/* Delete Defendant Button */}
+                    <td><button onClick={()=> handleDelete(defendant)}>Delete</button></td>
+                    {/* Open Edit Form Button */}
+                    <td><button onClick={()=> {
                     setEditFormData(defendant)
                     setShowEdit(true);}}>Edit</button></td>
-
+                    </> : null}
             </tr>)
         })}
         </tbody> : <tbody className={Styles.defendantListBody}>
         {/* Full Defendants list Start */}
         {defendants.map((defendant)=>{
             convertInchesToFeet(defendant)
+          let createdAt = convertDate(defendant.createdAt)
             return( <tr className={Styles.defendantRow} key={defendant.id}>
                 <td>{defendant.first_name}</td>
                 <td>{defendant.last_name}</td>
@@ -191,13 +211,19 @@ const DefendantList = ({defendants,session}) =>{
                 <td>{defendant.gender}</td>
                 <td>{defendant.race}</td>
                 <td>{defendant.reason}</td>
+                <td>{createdAt}</td>
+                <td>{defendant.user.name}</td>
 
-                {/* Delete Defendant Button */}
-                <td><button onClick={()=> handleDelete(defendant.id)}>Delete</button></td>
-                
-                <td><button onClick={()=> {
+                {/* Checks if user can make changes to defendant row */}
+                {user.id === defendant.userId ? 
+                <>
+                    {/* Delete Defendant Button */}
+                    <td><button onClick={()=> handleDelete(defendant)}>Delete</button></td>
+                    {/* Open Edit Form Button */}
+                    <td><button onClick={()=> {
                     setEditFormData(defendant)
                     setShowEdit(true);}}>Edit</button></td>
+                    </> : null}
             </tr>)
         })}
         </tbody>}
@@ -304,6 +330,7 @@ const DefendantList = ({defendants,session}) =>{
 
 export const getServerSideProps = async (context)=>{
     const session = await unstable_getServerSession(context.req,context.res,authOptions)
+    const user= session?.user
     if (!session) {
         return {
           redirect: {
@@ -314,9 +341,8 @@ export const getServerSideProps = async (context)=>{
       }
       const res = await getDefendants()
       const defendants = JSON.parse(JSON.stringify(res))
-
     return {
-        props:{defendants,session}
+        props:{user,defendants}
     }
 }
 

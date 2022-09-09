@@ -9,6 +9,7 @@ const load = async ()=>{
         await prisma.defendant.createMany({
             data: [
                 {
+                    "userId": "cl7kypd760076lj72rcdfag2z",
                     "first_name": "Rois",
                     "last_name": "Illwell",
                     "dob": "06-09-1955",
@@ -18,6 +19,7 @@ const load = async ()=>{
                     "race": "Pima",
                     "reason": "needs-based"
                   }, {
+                    "userId": "cl7kypd760076lj72rcdfag2z",
                     "first_name": "Kenneth",
                     "last_name": "Lansley",
                     "dob": "05-23-2000",
@@ -27,6 +29,7 @@ const load = async ()=>{
                     "race": "Asian",
                     "reason": "Open-architected"
                   }, {
+                    "userId": "cl7kypd760076lj72rcdfag2z",
                     "first_name": "Jenifer",
                     "last_name": "Peasgood",
                     "dob": "02-01-1962",
@@ -36,6 +39,7 @@ const load = async ()=>{
                     "race": "Mexican",
                     "reason": "Devolved"
                   }, {
+                    "userId": "cl7kypd760076lj72rcdfag2z",
                     "first_name": "Jerrylee",
                     "last_name": "Cocklie",
                     "dob": "06-22-1997",
@@ -45,6 +49,7 @@ const load = async ()=>{
                     "race": "American Indian",
                     "reason": "zero defect"
                   }, {
+                    "userId": "cl7kypd760076lj72rcdfag2z",
                     "first_name": "Adamo",
                     "last_name": "Farthing",
                     "dob": "03-20-1942",
