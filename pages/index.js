@@ -1,12 +1,11 @@
-import Head from 'next/head'
-import { useSession, signIn, signOut } from "next-auth/react"
-
+import Head from "next/head";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Home() {
-  const { data: session, status} = useSession()
+  const { data: session, status } = useSession();
 
-  if(status === 'loading') {
-    return null
+  if (status === "loading") {
+    return null;
   }
   if (session) {
     return (
@@ -14,12 +13,12 @@ export default function Home() {
         Signed in as {session.user.email} <br />
         <button onClick={() => signOut()}>Sign out</button>
       </>
-    )
+    );
   }
   return (
     <>
       Not signed in <br />
       <button onClick={() => signIn()}>Sign in</button>
     </>
-  )
+  );
 }
