@@ -1,47 +1,28 @@
 import Styles from "../styles/DefendantsList.module.scss";
-import { useState } from "react";
+import PropTypes from "prop-types";
+import React, { useState } from "react";
 import { unstable_getServerSession } from "next-auth/next";
 import { authOptions } from "./api/auth/[...nextauth]";
 import { getDefendants } from "../services/defendantService";
+import AddDefendant from "../components/AddDefendant";
+import EditDefendant from "../components/EditDefendant";
 
-const DefendantList = ({ defendants, user }) => {
+const DefendantList = ({ initialDefendants, user }) => {
   const [defendantSearch, setDefendantSearch] = useState("");
 
-  const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
-    dob: "",
-    feet: null,
-    inches: null,
-    weight: null,
-    gender: "",
-    race: "",
-    reason: "",
-    userId: "",
-  });
+  const [defendants, setDefendants] = useState(initialDefendants);
 
-  const [editFormData, setEditFormData] = useState({
-    first_name: "",
-    last_name: "",
-    dob: "",
-    feet: null,
-    inches: null,
-    weight: null,
-    gender: "",
-    race: "",
-    reason: "",
-  });
-
-  const [show, setShow] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-
-  const replaceDefendant = (res) => {
+  const updateDefendant = (res) => {
+    const newDefendants = [...defendants];
     const index = defendants.findIndex((defendant) => {
       return defendant.id === res.id;
     });
-    if (index > -1) {
-      return defendants.splice(index, 1, res);
-    }
+    newDefendants[index] = res;
+    setDefendants(newDefendants);
+  };
+
+  const addDefendant = (def) => {
+    setDefendants([...defendants, def]);
   };
 
   const filteredDefendantsList = defendants.filter((defendant) => {
@@ -55,14 +36,7 @@ const DefendantList = ({ defendants, user }) => {
     }
   });
 
-  const convertFeetToInches = (data) => {
-    const height = Number(data.feet) * 12 + Number(data.inches);
-    delete data.feet;
-    delete data.inches;
-    data.height = height;
-    return data;
-  };
-
+  // Make a reusable convert height function
   const convertInchesToFeet = (defendant) => {
     let feet = Math.floor(Number(defendant.height) / 12);
     let inches = defendant.height % 12;
@@ -74,75 +48,6 @@ const DefendantList = ({ defendants, user }) => {
     return date.toLocaleDateString();
   };
 
-  const handleChange = (e) => {
-    e.target.type === "number"
-      ? setFormData({ ...formData, [e.target.name]: parseInt(e.target.value) })
-      : setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleEditChange = (e) => {
-    e.target.type === "number"
-      ? setEditFormData({
-          ...editFormData,
-          [e.target.name]: parseInt(e.target.value),
-        })
-      : setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormData({ ...formData, userId: user.id });
-    convertFeetToInches(formData);
-    const defendant = await fetch(`http://localhost:3000/api/defendants`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-    const res = await defendant.json();
-    setFormData({
-      first_name: "",
-      last_name: "",
-      dob: "",
-      feet: null,
-      inches: null,
-      weight: null,
-      gender: "",
-      race: "",
-      reason: "",
-      userId: "",
-    });
-    setShow(false);
-    defendants.push(res);
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    convertFeetToInches(editFormData);
-    const defendant = await fetch(`http://localhost:3000/api/defendants`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(editFormData),
-    });
-    const res = await defendant.json();
-    replaceDefendant(res);
-    setEditFormData({
-      first_name: "",
-      last_name: "",
-      dob: "",
-      feet: null,
-      inches: null,
-      weight: null,
-      gender: "",
-      race: "",
-      reason: "",
-    });
-    setShowEdit(false);
-  };
-
   const handleDelete = async (defendant) => {
     const res = await fetch(`http://localhost:3000/api/defendants`, {
       method: "DELETE",
@@ -152,6 +57,10 @@ const DefendantList = ({ defendants, user }) => {
       body: JSON.stringify(defendant),
     });
     const deletedDefendant = await res.json();
+    const newDefendants = defendants.filter(
+      (def) => def.id !== deletedDefendant.id,
+    );
+    setDefendants(newDefendants);
   };
 
   return (
@@ -166,8 +75,8 @@ const DefendantList = ({ defendants, user }) => {
           setDefendantSearch(e.target.value);
         }}
       ></input>
-      <button onClick={() => setShow(true)}>Add Defendant</button>
       {/* SearchBar End */}
+      <AddDefendant addDefendant={addDefendant} userId={user.id} />
 
       <table className={Styles.defendantList}>
         {/* Table Head Start */}
@@ -260,16 +169,10 @@ const DefendantList = ({ defendants, user }) => {
                         </button>
                       </td>
                       {/* Open Edit Form Button */}
-                      <td>
-                        <button
-                          onClick={() => {
-                            setEditFormData(defendant);
-                            setShowEdit(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      </td>
+                      <EditDefendant
+                        defendant={defendant}
+                        updateDefendant={updateDefendant}
+                      />
                     </>
                   ) : null}
                 </tr>
@@ -279,210 +182,13 @@ const DefendantList = ({ defendants, user }) => {
         )}
         {/* Full Defendants list End */}
       </table>
-
-      {/*Post defendant Form Start*/}
-      {show ? (
-        <form className={Styles.defendantForm} onSubmit={handleSubmit}>
-          <button onClick={() => setShow(false)}>close</button>
-          <label>
-            First Name:
-            <input type="text" name="first_name" onChange={handleChange} />
-          </label>
-          <label>
-            Last Name:
-            <input type="text" name="last_name" onChange={handleChange} />
-          </label>
-          <label>
-            Date of Birth:
-            <input type="date" name="dob" onChange={handleChange} />
-          </label>
-          <label>
-            Height:
-            <input
-              type="number"
-              name="feet"
-              min={1}
-              max={9}
-              placeholder="Feet"
-              onChange={handleChange}
-            />
-            <input
-              type="number"
-              name="inches"
-              min={0}
-              max={11}
-              placeholder="Inches"
-              onChange={handleChange}
-            />
-          </label>
-          <label>
-            Weight:
-            <input
-              type="number"
-              name="weight"
-              placeholder="Lbs"
-              onChange={handleChange}
-            />
-          </label>
-          <label>
-            <p>Gender:</p>
-            <label>
-              Male:
-              <input
-                type="radio"
-                name="gender"
-                value="male"
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Female:
-              <input
-                type="radio"
-                name="gender"
-                value="female"
-                onChange={handleChange}
-              />
-            </label>
-            <label>
-              Other:
-              <input
-                type="radio"
-                name="gender"
-                value="other"
-                onChange={handleChange}
-              />
-            </label>
-          </label>
-          <label>
-            Race:
-            <input type="text" name="race" onChange={handleChange} />
-          </label>
-          <label>
-            Reason:
-            <input type="text" name="reason" onChange={handleChange} />
-          </label>
-          <input type="submit" value="submit" />
-        </form>
-      ) : null}
-      {/* Post Defendant Form End */}
-
-      {/*Edit Defendant Form Start */}
-      {showEdit ? (
-        <form className={Styles.defendantForm} onSubmit={handleEditSubmit}>
-          <button onClick={() => setShowEdit(false)}>close</button>
-          <label>
-            First Name:
-            <input
-              type="text"
-              name="first_name"
-              defaultValue={editFormData.first_name}
-              onChange={handleEditChange}
-            />
-          </label>
-          <label>
-            Last Name:
-            <input
-              type="text"
-              name="last_name"
-              defaultValue={editFormData.last_name}
-              onChange={handleEditChange}
-            />
-          </label>
-          <label>
-            Date of Birth:
-            <input
-              type="date"
-              name="dob"
-              defaultValue={editFormData.dob}
-              onChange={handleEditChange}
-            />
-          </label>
-          <label>
-            Height:
-            <input
-              type="number"
-              name="feet"
-              min={1}
-              max={9}
-              defaultValue={editFormData.feet}
-              onChange={handleEditChange}
-              placeholder="Feet"
-            />
-            <input
-              type="number"
-              name="inches"
-              min={0}
-              max={11}
-              defaultValue={editFormData.inches}
-              placeholder="Inches"
-              onChange={handleEditChange}
-            />
-          </label>
-          <label>
-            Weight:
-            <input
-              type="number"
-              name="weight"
-              placeholder="Lbs"
-              defaultValue={editFormData.weight}
-              onChange={handleEditChange}
-            />
-          </label>
-          <label>
-            <p>Gender:</p>
-            <label>
-              Male:
-              <input
-                type="radio"
-                name="gender"
-                value="male"
-                onChange={handleEditChange}
-              />
-            </label>
-            <label>
-              Female:
-              <input
-                type="radio"
-                name="gender"
-                value="female"
-                onChange={handleEditChange}
-              />
-            </label>
-            <label>
-              Other:
-              <input
-                type="radio"
-                name="gender"
-                value="other"
-                onChange={handleEditChange}
-              />
-            </label>
-          </label>
-          <label>
-            Race:
-            <input
-              type="text"
-              name="race"
-              defaultValue={editFormData.race}
-              onChange={handleEditChange}
-            />
-          </label>
-          <label>
-            Reason:
-            <input
-              type="text"
-              name="reason"
-              defaultValue={editFormData.reason}
-              onChange={handleEditChange}
-            />
-          </label>
-          <input type="submit" value="submit" />
-        </form>
-      ) : null}
-      {/* Edit Defendant Form End */}
     </div>
   );
+};
+
+DefendantList.propTypes = {
+  initialDefendants: PropTypes.arrayOf(PropTypes.object),
+  user: PropTypes.object,
 };
 
 export const getServerSideProps = async (context) => {
@@ -503,7 +209,7 @@ export const getServerSideProps = async (context) => {
   const res = await getDefendants();
   const defendants = JSON.parse(JSON.stringify(res));
   return {
-    props: { user, defendants },
+    props: { user, initialDefendants: defendants },
   };
 };
 
