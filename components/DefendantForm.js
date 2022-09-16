@@ -72,6 +72,7 @@ const DefendantForm = ({
               name="weight"
               placeholder="Lbs"
               onChange={handleChange}
+              defaultValue={formData.weight}
             />
           </label>
           <label>
@@ -81,7 +82,8 @@ const DefendantForm = ({
               <input
                 type="radio"
                 name="gender"
-                value="male"
+                value="Male"
+                checked={formData.gender === "Male"}
                 onChange={handleChange}
               />
             </label>
@@ -90,7 +92,8 @@ const DefendantForm = ({
               <input
                 type="radio"
                 name="gender"
-                value="female"
+                value="Female"
+                checked={formData.gender === "Female"}
                 onChange={handleChange}
               />
             </label>
@@ -99,7 +102,8 @@ const DefendantForm = ({
               <input
                 type="radio"
                 name="gender"
-                value="other"
+                value="Other"
+                checked={formData.gender === "Other"}
                 onChange={handleChange}
               />
             </label>
