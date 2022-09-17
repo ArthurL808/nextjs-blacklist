@@ -48,13 +48,15 @@ const EditDefendant = ({ defendant, updateDefendant }) => {
   };
 
   return show ? (
-    <DefendantForm
-      handleSubmit={handleSubmit}
-      handleChange={handleChange}
-      onClose={() => setShow(false)}
-      show={show}
-      formData={formData}
-    />
+    <td>
+      <DefendantForm
+        handleSubmit={handleSubmit}
+        handleChange={handleChange}
+        onClose={() => setShow(false)}
+        show={show}
+        formData={formData}
+      />
+    </td>
   ) : (
     <td>
       <button

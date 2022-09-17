@@ -7,6 +7,112 @@ import { getDefendants } from "../services/defendantService";
 import AddDefendant from "../components/AddDefendant";
 import EditDefendant from "../components/EditDefendant";
 
+const DefendantRow = ({ defendant, updateDefendant, handleDelete }) => {
+  // Make a reusable convert height function
+  const convertInchesToFeet = (defendant) => {
+    let feet = Math.floor(Number(defendant.height) / 12);
+    let inches = defendant.height % 12;
+    return (defendant.feet = feet), (defendant.inches = inches);
+  };
+
+  const convertDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString();
+  };
+
+  let createdAt = convertDate(defendant.createdAt);
+  convertInchesToFeet(defendant);
+  return (
+    <tr>
+      <td>{defendant.first_name}</td>
+      <td>{defendant.last_name}</td>
+      {/* Fix date format */}
+      <td>{defendant.dob}</td>
+      <td>{`${defendant.feet}' ${defendant.inches} "`}</td>
+      <td>{defendant.weight} Lbs</td>
+      <td>{defendant.gender}</td>
+      <td>{defendant.race}</td>
+      <td>{defendant.reason}</td>
+      <td>{createdAt}</td>
+      <td>{defendant.user.name}</td>
+      <>
+        {/* Delete Defendant Button */}
+        <td>
+          <button onClick={() => handleDelete(defendant)}>Delete</button>
+        </td>
+        {/* Open Edit Form Button */}
+        <EditDefendant
+          defendant={defendant}
+          updateDefendant={updateDefendant}
+        />
+      </>
+    </tr>
+  );
+};
+
+DefendantRow.propTypes = {
+  defendant: PropTypes.object.isRequired,
+  handleDelete: PropTypes.func.isRequired,
+  updateDefendant: PropTypes.func.isRequired,
+};
+
+const DefendantTable = ({
+  defendants,
+  handleDelete,
+  updateDefendant,
+  search,
+}) => {
+  const filteredDefendants = defendants.filter((defendant) => {
+    if (search === "") {
+      return defendant;
+    } else {
+      return defendant.first_name
+        .toLowerCase()
+        .concat(" ", defendant.last_name.toLowerCase())
+        .includes(search.toLowerCase());
+    }
+  });
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Date of Birth</th>
+          <th>Height</th>
+          <th>Weight</th>
+          <th>Gender</th>
+          <th>Race</th>
+          <th>Reason</th>
+          <th>Date Added</th>
+          <th>Added By</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {/* Full Defendants list Start */}
+        {filteredDefendants.map((defendant) => {
+          return (
+            <DefendantRow
+              defendant={defendant}
+              key={defendant.id}
+              handleDelete={handleDelete}
+              updateDefendant={updateDefendant}
+            />
+          );
+        })}
+      </tbody>
+    </table>
+  );
+};
+
+DefendantTable.propTypes = {
+  defendants: PropTypes.array.isRequired,
+  handleDelete: PropTypes.func.isRequired,
+  updateDefendant: PropTypes.func.isRequired,
+  search: PropTypes.string,
+};
+
 const DefendantList = ({ initialDefendants, user }) => {
   const [defendantSearch, setDefendantSearch] = useState("");
 
@@ -23,29 +129,6 @@ const DefendantList = ({ initialDefendants, user }) => {
 
   const addDefendant = (def) => {
     setDefendants([...defendants, def]);
-  };
-
-  const filteredDefendantsList = defendants.filter((defendant) => {
-    if (
-      defendant.first_name
-        .toLowerCase()
-        .concat(" ", defendant.last_name.toLowerCase())
-        .includes(defendantSearch.toLowerCase())
-    ) {
-      return defendant;
-    }
-  });
-
-  // Make a reusable convert height function
-  const convertInchesToFeet = (defendant) => {
-    let feet = Math.floor(Number(defendant.height) / 12);
-    let inches = defendant.height % 12;
-    return (defendant.feet = feet), (defendant.inches = inches);
-  };
-
-  const convertDate = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString();
   };
 
   const handleDelete = async (defendant) => {
@@ -72,116 +155,18 @@ const DefendantList = ({ initialDefendants, user }) => {
         type="search"
         placeholder="Search Name"
         onChange={(e) => {
-          setDefendantSearch(e.target.value);
+          setDefendantSearch(e.target.value.toLowerCase());
         }}
       ></input>
       {/* SearchBar End */}
       <AddDefendant addDefendant={addDefendant} userId={user.id} />
 
-      <table className={Styles.defendantList}>
-        {/* Table Head Start */}
-        <thead className={Styles.defendantListHeader}>
-          <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Date of Birth</th>
-            <th>Height</th>
-            <th>Weight</th>
-            <th>Gender</th>
-            <th>Race</th>
-            <th>Reason</th>
-            <th>Date Added</th>
-            <th>Added By</th>
-          </tr>
-        </thead>
-        {/* Table Head End */}
-
-        {defendantSearch ? (
-          <tbody className={Styles.defendantListBody}>
-            {filteredDefendantsList.map((defendant) => {
-              convertInchesToFeet(defendant);
-              let createdAt = convertDate(defendant.createdAt);
-              return (
-                <tr className={Styles.defendantRow} key={defendant.id}>
-                  <td>{defendant.first_name}</td>
-                  <td>{defendant.last_name}</td>
-                  <td>{defendant.dob}</td>
-                  <td>{`${defendant.feet}' ${defendant.inches} "`}</td>
-                  <td>{defendant.weight} Lbs</td>
-                  <td>{defendant.gender}</td>
-                  <td>{defendant.race}</td>
-                  <td>{defendant.reason}</td>
-                  <td>{createdAt}</td>
-                  <td>{defendant.user.name}</td>
-
-                  {/* Checks if user can make changes to defendant row */}
-                  {user.id === defendant.userId ? (
-                    <>
-                      {/* Delete Defendant Button */}
-                      <td>
-                        <button onClick={() => handleDelete(defendant)}>
-                          Delete
-                        </button>
-                      </td>
-                      {/* Open Edit Form Button */}
-                      <td>
-                        <button
-                          onClick={() => {
-                            setEditFormData(defendant);
-                            setShowEdit(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      </td>
-                    </>
-                  ) : null}
-                </tr>
-              );
-            })}
-          </tbody>
-        ) : (
-          <tbody className={Styles.defendantListBody}>
-            {/* Full Defendants list Start */}
-            {defendants.map((defendant) => {
-              convertInchesToFeet(defendant);
-              let createdAt = convertDate(defendant.createdAt);
-              return (
-                <tr className={Styles.defendantRow} key={defendant.id}>
-                  <td>{defendant.first_name}</td>
-                  <td>{defendant.last_name}</td>
-                  <td>{defendant.dob}</td>
-                  <td>{`${defendant.feet}' ${defendant.inches} "`}</td>
-                  <td>{defendant.weight} Lbs</td>
-                  <td>{defendant.gender}</td>
-                  <td>{defendant.race}</td>
-                  <td>{defendant.reason}</td>
-                  <td>{createdAt}</td>
-                  <td>{defendant.user.name}</td>
-
-                  {/* Checks if user can make changes to defendant row */}
-                  {user.id === defendant.userId ? (
-                    <>
-                      {/* Delete Defendant Button */}
-                      <td>
-                        <button onClick={() => handleDelete(defendant)}>
-                          Delete
-                        </button>
-                      </td>
-                      {/* Open Edit Form Button */}
-                      <EditDefendant
-                        defendant={defendant}
-                        updateDefendant={updateDefendant}
-                      />
-                    </>
-                  ) : null}
-                </tr>
-              );
-            })}
-          </tbody>
-        )}
-        {/* Full Defendants list End */}
-      </table>
+      <DefendantTable
+        defendants={defendants}
+        handleDelete={handleDelete}
+        updateDefendant={updateDefendant}
+        search={defendantSearch}
+      />
     </div>
   );
 };
