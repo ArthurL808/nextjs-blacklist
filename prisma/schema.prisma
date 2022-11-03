@@ -20,18 +20,20 @@ model Defendant {
   createdAt  DateTime @default(now())
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bounty     Bounty[]
 }
 
 model Bounty {
-  id                String   @id @default(uuid())
+  id                String    @id @default(uuid())
   userId            String
-  defendantId       String   @db.Uuid
+  defendantId       String
   rewardAmount      Int
   caseNumber        String
   lastKnownLocation String
   note              String
-  user              User     @relation(fields: [userId], references: [id])
-  createdAt         DateTime @default(now())
+  user              User      @relation(fields: [userId], references: [id])
+  createdAt         DateTime  @default(now())
+  defendant         Defendant @relation(fields: [defendantId], references: [id])
 }
 
 model Account {
