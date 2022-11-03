@@ -28,3 +28,29 @@ export const getUsersBounties = () => {
   });
   return usersBounties;
 };
+
+export const addBounty = async (data) => {
+  const bounty = await prisma.defendant.create({
+    data: {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      dob: data.dob,
+      height: data.height,
+      weight: data.weight,
+      gender: data.gender,
+      race: data.race,
+      reason: data.reason,
+      userId: data.userId,
+      bounty: {
+        create: {
+          userId: data.userId,
+          rewardAmount: data.rewardAmount,
+          caseNumber: data.caseNumber,
+          lastKnownLocation: data.lastKnownLocation,
+          note: data.note,
+        },
+      },
+    },
+  });
+  return bounty;
+};
