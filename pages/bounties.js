@@ -5,14 +5,15 @@ import { authOptions } from "./api/auth/[...nextauth]";
 import { getUsersBounties } from "../services/bountyService";
 import PropTypes from "prop-types";
 import AddBounty from "../components/AddBounty";
-const Bounties = ({ usersBounties, user }) => {
+const Bounties = ({ usersBounties, userSession }) => {
   return (
     <div className={Styles.container}>
       <h1>Bounties</h1>
-      <AddBounty userId={user.id} />
       {usersBounties.map((user) => {
         if (user.bounty.length <= 0) {
-          return null;
+          return (
+            <h1 key={user.id}>{`${user.name} has no current Bounties`}</h1>
+          );
         }
         return (
           <section key={user.id} className="usersBounties">
@@ -46,6 +47,9 @@ const Bounties = ({ usersBounties, user }) => {
                 </div>
               );
             })}
+            {user.id === userSession.id && user.bounty.length <= 5 ? (
+              <AddBounty userId={userSession.id} />
+            ) : null}
           </section>
         );
       })}
@@ -55,7 +59,7 @@ const Bounties = ({ usersBounties, user }) => {
 
 Bounties.propTypes = {
   usersBounties: PropTypes.arrayOf(PropTypes.object),
-  user: PropTypes.object,
+  userSession: PropTypes.object,
 };
 
 export const getServerSideProps = async (context) => {
@@ -64,7 +68,7 @@ export const getServerSideProps = async (context) => {
     context.res,
     authOptions,
   );
-  const user = session?.user;
+  const userSession = session?.user;
   if (!session) {
     return {
       redirect: {
@@ -77,7 +81,7 @@ export const getServerSideProps = async (context) => {
   const res = await getUsersBounties();
   const usersBounties = JSON.parse(JSON.stringify(res));
   return {
-    props: { usersBounties, user },
+    props: { usersBounties, userSession },
   };
 };
 
